@@ -38,6 +38,12 @@ const config: HardhatUserConfig = {
             allowUnlimitedContractSize: true,
             timeout: 1000000,
         },
+        educhain: {
+            accounts: process.env.KEYS?.split(" "),
+            chainId: 31337,
+            url: "https://educhain-explorer.auxo.fund",
+            timeout: 1000000,
+        },
     },
     solidity: {
         compilers: [
