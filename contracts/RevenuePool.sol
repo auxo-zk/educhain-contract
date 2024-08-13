@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/Context.sol";
-
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./interfaces/IRevenuePool.sol";
 import "./interfaces/IGovernor.sol";
 import "./interfaces/IGovernorVotes.sol";
@@ -12,34 +12,42 @@ import "hardhat/console.sol";
 
 contract RevenuePool is Context, IRevenuePool {
     IGovernorVotes private immutable _governor;
+    address private _token;
     uint256 private _revenue;
     uint256 private _totalFunded;
     uint256 private _nextTokenId;
     mapping(uint256 tokenId => bool) private _claimed;
     constructor(
         address governor_,
+        address token_,
         uint256 totalFunded_,
-        uint256 nextTokenId_
+        uint256 nextTokenId_,
+        uint256 revenue_
     ) payable {
-        require(msg.value > 0);
         _governor = IGovernorVotes(governor_);
-        _revenue = msg.value;
+        _revenue = revenue_;
+        _token = token_;
         _totalFunded = totalFunded_;
         _nextTokenId = nextTokenId_;
     }
 
     function claim(uint256 tokenId) external {
-        if (claimed(tokenId)) {
-            revert();
-        }
-        require(tokenId < _nextTokenId);
-        uint256 value = governor().token().getVotes(tokenId, _msgSender());
-        _claimed[tokenId] = true;
-        uint256 claimAmount = (revenue() * value) / totalFunded();
+        require(!claimed(tokenId), "Claimed!");
+        require(tokenId < _nextTokenId, "Invalid tokenId");
 
-        payable(_msgSender()).transfer(claimAmount);
+        uint256 value = governor().token().getVotes(tokenId, _msgSender());
+
+        _claimed[tokenId] = true;
+
+        uint256 claimAmount = (_revenue * value) / _totalFunded;
+
+        ERC20(_token).transfer(_msgSender(), claimAmount);
 
         emit RevenueClaimed(_msgSender(), tokenId);
+    }
+
+    function token() public view returns (address) {
+        return _token;
     }
 
     function governor() public view returns (IGovernorVotes) {

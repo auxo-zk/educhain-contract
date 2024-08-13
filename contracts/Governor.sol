@@ -29,6 +29,7 @@ contract Governor is Context, IGovernor, GovernorVotes {
 
     uint64 public votingDelay;
     uint64 public votingPeriod;
+
     uint64 public timelockPeriod;
     uint64 public queuingPeriod;
 
@@ -40,8 +41,6 @@ contract Governor is Context, IGovernor, GovernorVotes {
         uint256 governorId_,
         address founder_,
         address campaign_,
-        uint64 votingDelay_,
-        uint64 votingPeriod_,
         uint64 timelockPeriod_,
         uint64 queuingPeriod_
     ) GovernorVotes(tokenName_, tokenSymbol_, campaign_) {
@@ -59,28 +58,26 @@ contract Governor is Context, IGovernor, GovernorVotes {
         );
         _revenuePoolFactory = IRevenuePoolFactory(address(poolFactory));
 
-        votingDelay = votingDelay_;
-        votingPeriod = votingPeriod_;
         timelockPeriod = timelockPeriod_;
         queuingPeriod = queuingPeriod_;
     }
 
-    fallback() external payable {
-        if (_msgSender() == address(_campaign)) {
-            _totalFunded += msg.value;
-            uint256 minted;
-            assembly {
-                minted := calldataload(0)
-            }
-            _nextTokenId += minted;
-        }
-    }
-
-    receive() external payable {}
-
     modifier onlyFounder() {
         require(_msgSender() == founder());
         _;
+    }
+
+    modifier onlyCampaign() {
+        require(_msgSender() == address(_campaign));
+        _;
+    }
+
+    function increaseFundedAndMinted(
+        uint256 fundedAmount,
+        uint256 mintedAmount
+    ) external onlyCampaign {
+        _totalFunded += fundedAmount;
+        _nextTokenId += mintedAmount;
     }
 
     function joinCampaign() external onlyFounder {
@@ -91,10 +88,21 @@ contract Governor is Context, IGovernor, GovernorVotes {
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
-        bytes32 descriptionHash
+        bytes32 descriptionHash,
+        uint64 startTime,
+        uint64 votingDuration
     ) external onlyFounder returns (uint256) {
         address proposer = _msgSender();
-        return _propose(targets, values, calldatas, descriptionHash, proposer);
+        return
+            _propose(
+                targets,
+                values,
+                calldatas,
+                descriptionHash,
+                proposer,
+                startTime,
+                votingDuration
+            );
     }
 
     function castVote(
@@ -145,11 +153,11 @@ contract Governor is Context, IGovernor, GovernorVotes {
         );
 
         ProposalCore storage proposal = _proposals[proposalId];
-        uint256 eta = proposal.etaBlocks;
-        require(
-            clock() >= eta && clock() <= (eta + queuingPeriod),
-            "Governor::execute: Transaction can not be executed now."
-        );
+        // uint256 eta = proposal.etaBlocks;
+        // require(
+        //     clock() >= eta && clock() <= (eta + queuingPeriod),
+        //     "Governor::execute: Transaction can not be executed now."
+        // );
         Action storage action = _actions[proposalId];
 
         for (uint256 i = 0; i < action.targets.length; i++) {
@@ -219,7 +227,7 @@ contract Governor is Context, IGovernor, GovernorVotes {
     // ========= VIEW FUNCTIONS =========
 
     function clock() public view returns (uint256) {
-        return block.number;
+        return block.timestamp;
     }
 
     function name() public view returns (string memory) {
@@ -343,7 +351,9 @@ contract Governor is Context, IGovernor, GovernorVotes {
         uint256[] memory values,
         bytes[] memory calldatas,
         bytes32 descriptionHash,
-        address proposer
+        address proposer,
+        uint64 startTime,
+        uint64 votingDuration
     ) internal virtual returns (uint256 proposalId) {
         proposalId = hashProposal(targets, values, calldatas, descriptionHash);
 
@@ -369,13 +379,14 @@ contract Governor is Context, IGovernor, GovernorVotes {
         _proposalIds[_proposalCounter] = proposalId;
         _proposalCounter += 1;
 
-        uint256 snapshot = clock() + votingDelay;
-
+        /// proposal
         ProposalCore storage proposal = _proposals[proposalId];
         proposal.proposer = proposer;
-        proposal.voteStart = SafeCast.toUint64(snapshot);
-        proposal.voteDuration = votingPeriod;
+        proposal.voteStart = startTime;
+        proposal.voteDuration = votingDuration;
         proposal.descriptionHash = descriptionHash;
+
+        // action
         Action storage action = _actions[proposalId];
         action.targets = targets;
         action.values = values;
@@ -388,8 +399,8 @@ contract Governor is Context, IGovernor, GovernorVotes {
             values,
             new string[](targets.length),
             calldatas,
-            snapshot,
-            snapshot + votingPeriod,
+            startTime,
+            startTime + votingDuration,
             descriptionHash
         );
 

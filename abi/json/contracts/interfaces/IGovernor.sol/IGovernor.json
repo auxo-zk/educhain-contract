@@ -616,6 +616,16 @@
         "internalType": "bytes32",
         "name": "descriptionHash",
         "type": "bytes32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "startTime",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "votingDuration",
+        "type": "uint64"
       }
     ],
     "name": "propose",

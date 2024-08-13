@@ -38,16 +38,6 @@
       },
       {
         "internalType": "uint64",
-        "name": "votingDelay_",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint64",
-        "name": "votingPeriod_",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint64",
         "name": "timelockPeriod_",
         "type": "uint64"
       },
@@ -316,10 +306,6 @@
     "type": "event"
   },
   {
-    "stateMutability": "payable",
-    "type": "fallback"
-  },
-  {
     "inputs": [],
     "name": "campaign",
     "outputs": [
@@ -550,6 +536,24 @@
       }
     ],
     "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "fundedAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "mintedAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "increaseFundedAndMinted",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -818,6 +822,16 @@
         "internalType": "bytes32",
         "name": "descriptionHash",
         "type": "bytes32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "startTime",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "votingDuration",
+        "type": "uint64"
       }
     ],
     "name": "propose",
@@ -953,9 +967,5 @@
     ],
     "stateMutability": "view",
     "type": "function"
-  },
-  {
-    "stateMutability": "payable",
-    "type": "receive"
   }
 ]

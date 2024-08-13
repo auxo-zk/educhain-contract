@@ -2,6 +2,7 @@ import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-contract-sizer";
 import "hardhat-abi-exporter";
+import "dotenv/config";
 
 var accounts;
 const mnemonic: string | undefined = process.env.MNEMONIC;
@@ -18,6 +19,7 @@ const chainIds = {
   hardhat: 31337,
   eth: 1,
   goerli: 5,
+  educhain: 656476,
   sepolia: 11155111,
   "mantle-testnet": 5001,
   "bnb-testnet": 97,
@@ -40,10 +42,9 @@ const config: HardhatUserConfig = {
       timeout: 1000000,
     },
     educhain: {
-      accounts: process.env.KEYS?.split(" "),
-      chainId: 31337,
-      url: "https://educhain-explorer.auxo.fund",
-      timeout: 1000000,
+      chainId: chainIds.educhain,
+      url: "https://open-campus-codex-sepolia.drpc.org",
+      accounts: [process.env.acc1!],
     },
   },
   solidity: {

@@ -7,6 +7,11 @@
         "type": "address"
       },
       {
+        "internalType": "address",
+        "name": "token_",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "totalFunded_",
         "type": "uint256"
@@ -14,6 +19,11 @@
       {
         "internalType": "uint256",
         "name": "nextTokenId_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "revenue_",
         "type": "uint256"
       }
     ],
@@ -105,6 +115,19 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "token",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",

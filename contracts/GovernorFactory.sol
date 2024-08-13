@@ -12,6 +12,7 @@ contract GovernorFactory is Context, IGovernorFactory {
     uint256 public nextGovernorId;
     mapping(uint256 governorId => address) _governors;
     mapping(address governor => bool) _hasGovernor;
+    mapping(address founder => uint256[]) _founderGovernorIds;
 
     uint64 public votingDelay;
     uint64 public votingPeriod;
@@ -19,15 +20,10 @@ contract GovernorFactory is Context, IGovernorFactory {
     uint64 public queuingPeriod;
     constructor(
         address campaign_,
-        uint64 votingDelay_,
-        uint64 votingPeriod_,
         uint64 timelockPeriod_,
         uint64 queuingPeriod_
     ) {
         _campaign = ICampaign(campaign_);
-
-        votingDelay = votingDelay_;
-        votingPeriod = votingPeriod_;
         timelockPeriod = timelockPeriod_;
         queuingPeriod = queuingPeriod_;
     }
@@ -50,8 +46,6 @@ contract GovernorFactory is Context, IGovernorFactory {
                 governorId,
                 _msgSender(),
                 address(_campaign),
-                votingDelay,
-                votingPeriod,
                 timelockPeriod,
                 queuingPeriod
             )
@@ -59,6 +53,7 @@ contract GovernorFactory is Context, IGovernorFactory {
 
         _governors[governorId] = governorAddress;
         _hasGovernor[governorAddress] = true;
+        _founderGovernorIds[_msgSender()].push(governorId);
 
         emit GovernorCreated(
             governorId,
@@ -72,6 +67,26 @@ contract GovernorFactory is Context, IGovernorFactory {
         uint256 governorId
     ) external view override returns (address) {
         return _governors[governorId];
+    }
+
+    function founderGovernorIds(
+        address founder
+    ) external view returns (uint256[] memory) {
+        return _founderGovernorIds[founder];
+    }
+
+    function founderGovernorAddresses(
+        address founder
+    ) external view returns (address[] memory) {
+        uint256 arrayLength = _founderGovernorIds[founder].length;
+
+        address[] memory addresses = new address[](arrayLength);
+
+        for (uint256 i; i < arrayLength; i++) {
+            addresses[i] = _governors[_founderGovernorIds[founder][i]];
+        }
+
+        return addresses;
     }
 
     function hasGovernor(

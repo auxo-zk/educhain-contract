@@ -33,11 +33,15 @@ interface ICampaign {
         uint64 fundStart;
         uint64 fundDuration;
         bool allocated;
+        address tokenRaising;
         uint256[] governorIds;
         mapping(uint256 governorId => Course) courses;
     }
 
     function launchCampaign(
+        uint64 startFunding,
+        uint64 duration,
+        address tokenRaising,
         bytes32 descriptionHash
     ) external returns (uint256 campaignId);
 
@@ -47,12 +51,12 @@ interface ICampaign {
     ) external returns (uint256);
 
     function fund(
-        uint256 governorId
+        uint256 campaignId,
+        uint256 governorId,
+        uint256 amount
     ) external payable returns (uint256 tokenId);
 
-    function allocateFunds() external;
-
-    function founder() external view returns (address);
+    function allocateFunds(uint256 campaignId) external;
 
     function campaignData(
         uint256 campaignId
@@ -65,6 +69,7 @@ interface ICampaign {
             uint64 fundStart,
             uint64 fundDuration,
             bool allocated,
+            address tokenRaising,
             uint256[] memory governorIds
         );
 }

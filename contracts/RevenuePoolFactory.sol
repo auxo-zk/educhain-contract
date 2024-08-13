@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "./interfaces/IGovernor.sol";
 import "./interfaces/IRevenuePool.sol";
@@ -21,13 +22,18 @@ contract RevenuePoolFactory is Context, IRevenuePoolFactory {
         require(_msgSender() == _owner);
         _;
     }
-    function createPool() external payable onlyOwner {
-        require(msg.value > 0);
-        RevenuePool revenuePool = new RevenuePool{value: msg.value}(
+
+    function createPool(address token, uint256 amount) external payable {
+        RevenuePool revenuePool = new RevenuePool(
             address(_governor),
+            token,
             _governor.totalFunded(),
-            _governor.nextTokenId()
+            _governor.nextTokenId(),
+            amount
         );
+
+        ERC20(token).transferFrom(msg.sender, address(revenuePool), amount);
+
         _pools.push(IRevenuePool(address(revenuePool)));
 
         emit PoolCreated(address(revenuePool));

@@ -82,7 +82,9 @@ interface IGovernor {
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
-        bytes32 descriptionHash
+        bytes32 descriptionHash,
+        uint64 startTime,
+        uint64 votingDuration
     ) external returns (uint256 proposalId);
 
     function castVote(

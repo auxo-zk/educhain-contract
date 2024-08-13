@@ -3,26 +3,6 @@
     "inputs": [
       {
         "internalType": "uint64",
-        "name": "fundingDelay_",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint64",
-        "name": "fundingPeriod_",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint64",
-        "name": "votingDelay_",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint64",
-        "name": "votingPeriod_",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint64",
         "name": "timelockPeriod_",
         "type": "uint64"
       },
@@ -34,22 +14,6 @@
     ],
     "stateMutability": "nonpayable",
     "type": "constructor"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint8",
-        "name": "bits",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint256",
-        "name": "value",
-        "type": "uint256"
-      }
-    ],
-    "name": "SafeCastOverflowedUintDowncast",
-    "type": "error"
   },
   {
     "anonymous": false,
@@ -134,20 +98,13 @@
     "type": "event"
   },
   {
-    "inputs": [],
-    "name": "_founder",
-    "outputs": [
+    "inputs": [
       {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "campaignId",
+        "type": "uint256"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "allocateFunds",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -189,6 +146,11 @@
         "type": "bool"
       },
       {
+        "internalType": "address",
+        "name": "tokenRaising",
+        "type": "address"
+      },
+      {
         "internalType": "uint256[]",
         "name": "governorIds",
         "type": "uint256[]"
@@ -198,13 +160,19 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "clock",
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "campaignsOwn",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "uint256[]",
         "name": "",
-        "type": "uint256"
+        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",
@@ -252,36 +220,20 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "currentCampaignId",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "founder",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "campaignId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
         "name": "governorId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
         "type": "uint256"
       }
     ],
@@ -294,32 +246,6 @@
       }
     ],
     "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "fundingDelay",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "fundingPeriod",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -339,7 +265,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "governorId",
+        "name": "campaignId",
         "type": "uint256"
       },
       {
@@ -361,6 +287,21 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "uint64",
+        "name": "startFunding",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "duration",
+        "type": "uint64"
+      },
+      {
+        "internalType": "address",
+        "name": "tokenRaising",
+        "type": "address"
+      },
       {
         "internalType": "bytes32",
         "name": "descriptionHash",

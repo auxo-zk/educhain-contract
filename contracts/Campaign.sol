@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "./GovernorFactory.sol";
@@ -11,14 +12,10 @@ import "./interfaces/ICampaign.sol";
 import "./interfaces/IVotes.sol";
 
 contract Campaign is Context, ICampaign {
-    address public _founder;
     IGovernorFactory private immutable _governorFactory;
     uint256 public nextCampaignId;
-    uint256 public currentCampaignId;
     mapping(uint256 campaignId => CampaignCore) _campaigns;
-
-    uint64 public fundingDelay;
-    uint64 public fundingPeriod;
+    mapping(address => uint256[]) _campaignsOwn;
 
     modifier onlyGovernorFactory() {
         require(_msgSender() == address(governorFactory()));
@@ -30,46 +27,34 @@ contract Campaign is Context, ICampaign {
         _;
     }
 
-    modifier onlyFounder() {
-        require(founder() == _msgSender());
-        _;
-    }
-
-    constructor(
-        uint64 fundingDelay_,
-        uint64 fundingPeriod_,
-        uint64 votingDelay_,
-        uint64 votingPeriod_,
-        uint64 timelockPeriod_,
-        uint64 queuingPeriod_
-    ) {
-        _founder = _msgSender();
+    constructor(uint64 timelockPeriod_, uint64 queuingPeriod_) {
         _governorFactory = IGovernorFactory(
             address(
                 new GovernorFactory(
                     address(this),
-                    votingDelay_,
-                    votingPeriod_,
                     timelockPeriod_,
                     queuingPeriod_
                 )
             )
         );
         nextCampaignId = 1;
-        fundingDelay = fundingDelay_;
-        fundingPeriod = fundingPeriod_;
     }
 
     function launchCampaign(
+        uint64 startFunding,
+        uint64 duration,
+        address tokenRaising,
         bytes32 descriptionHash
     ) external returns (uint256) {
-        require(currentCampaignId == 0);
-        currentCampaignId = nextCampaignId;
+        uint256 currentCampaignId = nextCampaignId;
         nextCampaignId += 1;
         CampaignCore storage campaign = _campaigns[currentCampaignId];
         campaign.descriptionHash = descriptionHash;
-        campaign.fundStart = SafeCast.toUint64(clock() + fundingDelay);
-        campaign.fundDuration = fundingPeriod;
+        campaign.fundStart = startFunding;
+        campaign.fundDuration = duration;
+        campaign.tokenRaising = tokenRaising;
+
+        _campaignsOwn[msg.sender].push(currentCampaignId);
 
         emit CampaignLaunched(currentCampaignId);
 
@@ -77,105 +62,92 @@ contract Campaign is Context, ICampaign {
     }
 
     function joinCampaign(
-        uint256 governorId,
+        uint256 campaignId,
         address governor
-    ) external onlyGovernor returns (uint256) {
-        require(state(0) == CampaignState.Pending);
-        CampaignCore storage campaign = _campaigns[currentCampaignId];
+    ) external returns (uint256) {
+        uint256 governorId = Governor(governor).governorId();
+        address founder = Governor(governor).founder();
+        require(founder == msg.sender, "Not founder");
+
+        require(state(campaignId) == CampaignState.Pending);
+
+        CampaignCore storage campaign = _campaigns[campaignId];
         Course storage course = campaign.courses[governorId];
         require(course.governor == address(0));
         course.governor = governor;
-        course.fund = 0;
+
         campaign.governorIds.push(governorId);
 
-        emit GovernorJoined(currentCampaignId, governorId);
+        emit GovernorJoined(campaignId, governorId);
 
         return governorId;
     }
 
     function fund(
-        uint256 governorId
+        uint256 campaignId,
+        uint256 governorId,
+        uint256 amount
     ) external payable returns (uint256 tokenId) {
-        require(state(0) == CampaignState.Active);
-        require(msg.value > 0);
-        CampaignCore storage campaign = _campaigns[currentCampaignId];
+        require(state(campaignId) == CampaignState.Active);
+
+        CampaignCore storage campaign = _campaigns[campaignId];
         Course storage course = campaign.courses[governorId];
         require(course.governor != address(0));
-        campaign.totalFunded += msg.value;
-        course.fund += msg.value;
+
+        // transfer money to this contract
+        ERC20(campaign.tokenRaising).transferFrom(
+            msg.sender,
+            address(this),
+            amount
+        );
+
+        campaign.totalFunded += amount;
+        course.fund += amount;
         course.minted += 1;
         Governor governor = Governor(payable(course.governor));
         IVotes erc721Votes = IVotes(governor.token());
-        tokenId = erc721Votes.mint(_msgSender(), msg.value);
+        tokenId = erc721Votes.mint(_msgSender(), amount);
 
-        emit Fund(currentCampaignId, governorId, msg.value, tokenId);
+        emit Fund(campaignId, governorId, amount, tokenId);
     }
 
-    function allocateFunds() external {
-        require(state(0) == CampaignState.Succeeded);
+    function allocateFunds(uint256 campaignId) external {
+        require(state(campaignId) == CampaignState.Succeeded);
 
-        CampaignCore storage campaign = _campaigns[currentCampaignId];
+        CampaignCore storage campaign = _campaigns[campaignId];
         campaign.allocated = true;
+        ERC20 tokenRaising = ERC20(campaign.tokenRaising);
 
         for (uint256 i = 0; i < campaign.governorIds.length; i++) {
             uint256 governorId = campaign.governorIds[i];
-            Course storage course = campaign.courses[governorId];
-            bytes memory callData = new bytes(32);
-            uint256 minted = course.minted;
-            assembly {
-                mstore(add(callData, 32), minted)
-            }
-            (bool success, ) = payable(course.governor).call{
-                value: course.fund
-            }(callData);
 
-            require(success);
+            Course storage course = campaign.courses[governorId];
+
+            tokenRaising.transfer(course.governor, course.fund);
+
+            Governor(course.governor).increaseFundedAndMinted(
+                course.fund,
+                course.minted
+            );
         }
 
-        emit FundAllocated(currentCampaignId, campaign.governorIds);
-
-        currentCampaignId = 0;
+        emit FundAllocated(campaignId, campaign.governorIds);
     }
 
     function state(uint256 campaignId) public view returns (CampaignState) {
-        if (campaignId == 0) {
-            require(currentCampaignId != 0);
-            uint256 currentBlock = clock();
-            CampaignCore storage campaign = _campaigns[currentCampaignId];
-            if (campaign.allocated) {
-                return CampaignState.Allocated;
-            }
-            if (currentBlock < campaign.fundStart) {
-                return CampaignState.Pending;
-            }
-            if (currentBlock < campaign.fundStart + campaign.fundDuration) {
-                return CampaignState.Active;
-            } else {
-                return CampaignState.Succeeded;
-            }
-        } else {
-            uint256 currentBlock = clock();
-            CampaignCore storage campaign = _campaigns[campaignId];
-            if (campaign.allocated) {
-                return CampaignState.Allocated;
-            }
-            if (currentBlock < campaign.fundStart) {
-                return CampaignState.Pending;
-            }
-            if (currentBlock < campaign.fundStart + campaign.fundDuration) {
-                return CampaignState.Active;
-            } else {
-                return CampaignState.Succeeded;
-            }
+        uint256 currentTimeStamp = block.timestamp;
+        CampaignCore storage campaign = _campaigns[campaignId];
+        if (campaign.allocated) {
+            return CampaignState.Allocated;
         }
-    }
-
-    function clock() public view returns (uint256) {
-        return block.number;
-    }
-
-    function founder() public view returns (address) {
-        return _founder;
+        if (currentTimeStamp < campaign.fundStart) {
+            return CampaignState.Pending;
+        }
+        if (currentTimeStamp < campaign.fundStart + campaign.fundDuration) {
+            return CampaignState.Active;
+        } else {
+            return CampaignState.Succeeded;
+        }
     }
 
     function governorFactory() public view returns (IGovernorFactory) {
@@ -186,8 +158,13 @@ contract Campaign is Context, ICampaign {
         uint256 campaignId,
         uint256 governorId
     ) public view returns (Course memory) {
-        require(campaignId >= 1 && campaignId < nextCampaignId);
         return _campaigns[campaignId].courses[governorId];
+    }
+
+    function campaignsOwn(
+        address owner
+    ) public view returns (uint256[] memory) {
+        return _campaignsOwn[owner];
     }
 
     function campaignData(
@@ -201,6 +178,7 @@ contract Campaign is Context, ICampaign {
             uint64 fundStart,
             uint64 fundDuration,
             bool allocated,
+            address tokenRaising,
             uint256[] memory governorIds
         )
     {
@@ -210,6 +188,7 @@ contract Campaign is Context, ICampaign {
         fundStart = campaign.fundStart;
         fundDuration = campaign.fundDuration;
         allocated = campaign.allocated;
+        tokenRaising = campaign.tokenRaising;
         governorIds = campaign.governorIds;
     }
 }

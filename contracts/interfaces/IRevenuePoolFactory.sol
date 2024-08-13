@@ -5,7 +5,7 @@ import "./IRevenuePool.sol";
 interface IRevenuePoolFactory {
     event PoolCreated(address pool);
 
-    function createPool() external payable;
+    function createPool(address token, uint256 amount) external payable;
 
     function pool(uint256 poolIndex) external view returns (IRevenuePool);
 
