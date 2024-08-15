@@ -138,6 +138,8 @@ interface IGovernor {
 
     function proposalIds(uint256 proposalIndex) external view returns (uint256);
 
+    function descriptionHash() external view returns (bytes32);
+
     function state(uint256 proposalId) external view returns (ProposalState);
 
     function proposalCore(

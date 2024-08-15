@@ -262,6 +262,10 @@ contract Governor is Context, IGovernor, GovernorVotes {
         return _proposalCounter;
     }
 
+    function descriptionHash() external view returns (bytes32) {
+        return _descriptionHash;
+    }
+
     function proposalIds(
         uint256 proposalIndex
     ) external view returns (uint256) {
