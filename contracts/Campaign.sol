@@ -63,7 +63,8 @@ contract Campaign is Context, ICampaign {
 
     function joinCampaign(
         uint256 campaignId,
-        address governor
+        address governor,
+        bytes32 descriptionHash
     ) external returns (uint256) {
         uint256 governorId = Governor(governor).governorId();
         address founder = Governor(governor).founder();
@@ -75,6 +76,7 @@ contract Campaign is Context, ICampaign {
         Course storage course = campaign.courses[governorId];
         require(course.governor == address(0));
         course.governor = governor;
+        course.descriptionHash = descriptionHash;
 
         campaign.governorIds.push(governorId);
 

@@ -80,10 +80,6 @@ contract Governor is Context, IGovernor, GovernorVotes {
         _nextTokenId += mintedAmount;
     }
 
-    function joinCampaign() external onlyFounder {
-        campaign().joinCampaign(governorId(), address(this));
-    }
-
     function propose(
         address[] memory targets,
         uint256[] memory values,

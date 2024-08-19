@@ -25,6 +25,7 @@ interface ICampaign {
         address governor;
         uint256 fund;
         uint256 minted;
+        bytes32 descriptionHash;
     }
 
     struct CampaignCore {
@@ -47,7 +48,8 @@ interface ICampaign {
 
     function joinCampaign(
         uint256 governorId,
-        address governor
+        address governor,
+        bytes32 descriptionHash
     ) external returns (uint256);
 
     function fund(

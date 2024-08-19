@@ -209,6 +209,11 @@
             "internalType": "uint256",
             "name": "minted",
             "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "descriptionHash",
+            "type": "bytes32"
           }
         ],
         "internalType": "struct ICampaign.Course",
@@ -272,6 +277,11 @@
         "internalType": "address",
         "name": "governor",
         "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "descriptionHash",
+        "type": "bytes32"
       }
     ],
     "name": "joinCampaign",
