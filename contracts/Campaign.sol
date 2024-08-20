@@ -16,6 +16,7 @@ contract Campaign is Context, ICampaign {
     uint256 public nextCampaignId;
     mapping(uint256 campaignId => CampaignCore) _campaigns;
     mapping(address => uint256[]) _campaignsOwn;
+    mapping(address governorAddress => uint256[] campaignIds) _joinedCampaign;
 
     modifier onlyGovernorFactory() {
         require(_msgSender() == address(governorFactory()));
@@ -79,6 +80,8 @@ contract Campaign is Context, ICampaign {
         course.descriptionHash = descriptionHash;
 
         campaign.governorIds.push(governorId);
+
+        _joinedCampaign[governor].push(campaignId);
 
         emit GovernorJoined(campaignId, governorId);
 
@@ -167,6 +170,12 @@ contract Campaign is Context, ICampaign {
         address owner
     ) public view returns (uint256[] memory) {
         return _campaignsOwn[owner];
+    }
+
+    function joinedCampaign(
+        address governorAddress
+    ) public view returns (uint256[] memory) {
+        return _joinedCampaign[governorAddress];
     }
 
     function campaignData(
