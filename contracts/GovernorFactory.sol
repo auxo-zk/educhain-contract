@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/utils/Context.sol";
 import "./interfaces/ICampaign.sol";
 import "./interfaces/IGovernorFactory.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./Governor.sol";
 
-contract GovernorFactory is Context, IGovernorFactory {
-    ICampaign private immutable _campaign;
+contract GovernorFactory is OwnableUpgradeable, IGovernorFactory {
+    ICampaign private _campaign;
 
     uint256 public nextGovernorId;
     mapping(uint256 governorId => address) _governors;
@@ -18,15 +18,23 @@ contract GovernorFactory is Context, IGovernorFactory {
     uint64 public votingPeriod;
     uint64 public timelockPeriod;
     uint64 public queuingPeriod;
-    constructor(
+
+    function initialize(
+        address initialOwner_,
         address campaign_,
         uint64 timelockPeriod_,
         uint64 queuingPeriod_
-    ) {
+    ) public initializer {
+        require(initialOwner_ != address(0), "Invalid address");
+        __Ownable_init(initialOwner_);
+
         _campaign = ICampaign(campaign_);
         timelockPeriod = timelockPeriod_;
         queuingPeriod = queuingPeriod_;
     }
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {}
 
     function createGovernor(
         string memory name,
@@ -44,7 +52,7 @@ contract GovernorFactory is Context, IGovernorFactory {
                 tokenSymbol,
                 descriptionHash,
                 governorId,
-                _msgSender(),
+                msg.sender,
                 address(_campaign),
                 timelockPeriod,
                 queuingPeriod
@@ -53,12 +61,12 @@ contract GovernorFactory is Context, IGovernorFactory {
 
         _governors[governorId] = governorAddress;
         _hasGovernor[governorAddress] = true;
-        _founderGovernorIds[_msgSender()].push(governorId);
+        _founderGovernorIds[msg.sender].push(governorId);
 
         emit GovernorCreated(
             governorId,
             governorAddress,
-            _msgSender(),
+            msg.sender,
             descriptionHash
         );
     }

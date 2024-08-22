@@ -1,7 +1,11 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import "@openzeppelin/hardhat-upgrades";
 import "hardhat-contract-sizer";
 import "hardhat-abi-exporter";
+import "hardhat-deploy";
+import "hardhat-deploy-ethers";
+
 import "dotenv/config";
 
 var accounts;
@@ -27,6 +31,9 @@ const chainIds = {
 
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
+  namedAccounts: {
+    deployer: 0,
+  },
   networks: {
     hardhat: {
       allowUnlimitedContractSize: true,
@@ -43,6 +50,8 @@ const config: HardhatUserConfig = {
     },
     educhain: {
       chainId: chainIds.educhain,
+      loggingEnabled: true,
+      saveDeployments: true,
       url: "https://open-campus-codex-sepolia.drpc.org",
       accounts: [process.env.acc1!],
     },
@@ -58,15 +67,15 @@ const config: HardhatUserConfig = {
           },
         },
       },
-      {
-        version: "0.8.12",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-        },
-      },
+      // {
+      //   version: "0.8.12",
+      //   settings: {
+      //     optimizer: {
+      //       enabled: true,
+      //       runs: 200,
+      //     },
+      //   },
+      // },
     ],
   },
   gasReporter: {

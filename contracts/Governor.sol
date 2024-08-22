@@ -16,8 +16,10 @@ contract Governor is Context, IGovernor, GovernorVotes {
     bytes32 private _descriptionHash;
     uint256 private _governorId;
     address private _founder;
-    ICampaign private immutable _campaign;
-    IRevenuePoolFactory private immutable _revenuePoolFactory;
+
+    ICampaign private _campaign;
+    IRevenuePoolFactory private _revenuePoolFactory;
+    
     uint256 private _nextTokenId;
     uint256 private _proposalCounter;
     mapping(uint256 proposalIndex => uint256) private _proposalIds;

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/utils/Context.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "./GovernorFactory.sol";
 import "./Governor.sol";
@@ -11,34 +11,56 @@ import "./interfaces/IGovernorFactory.sol";
 import "./interfaces/ICampaign.sol";
 import "./interfaces/IVotes.sol";
 
-contract Campaign is Context, ICampaign {
-    IGovernorFactory private immutable _governorFactory;
+contract Campaign is OwnableUpgradeable, ICampaign {
+    
+    IGovernorFactory public governorFactory;
     uint256 public nextCampaignId;
-    mapping(uint256 campaignId => CampaignCore) _campaigns;
-    mapping(address => uint256[]) _campaignsOwn;
+
+    mapping(address founder => uint256[] campaignIds) _campaignsOwn;
     mapping(address governorAddress => uint256[] campaignIds) _joinedCampaign;
 
+    mapping(uint256 campaignId => CampaignCore) _campaigns;
+    mapping(uint256 campaignId => address founder) public campaignFounders;
+
+    mapping(address investor => mapping(uint256 campaignId => bool))
+        public isInvestedCampaign;
+    mapping(address investor => mapping(address governor => bool))
+        public isInvestedGovernor;
+    mapping(address investor => mapping(uint256 campaignId => mapping(address governor => bool)))
+        public isInvestedGovernorInACampaign;
+
+    mapping(address investor => uint256[] campaignId)
+        public investedCampaignList;
+    mapping(address investor => address[] governor) public investedGovernorList;
+    mapping(address investor => mapping(uint256 campaignId => address[] governors))
+        public investedGovernorInACampaignList;
+
     modifier onlyGovernorFactory() {
-        require(_msgSender() == address(governorFactory()));
+        require(msg.sender == address(governorFactory));
         _;
     }
 
     modifier onlyGovernor() {
-        require(governorFactory().hasGovernor(_msgSender()));
+        require(governorFactory.hasGovernor(msg.sender));
         _;
     }
 
-    constructor(uint64 timelockPeriod_, uint64 queuingPeriod_) {
-        _governorFactory = IGovernorFactory(
-            address(
-                new GovernorFactory(
-                    address(this),
-                    timelockPeriod_,
-                    queuingPeriod_
-                )
-            )
-        );
+    function initialize(address initialOwner_) public initializer {
+        require(initialOwner_ != address(0), "Invalid address");
+        __Ownable_init(initialOwner_);
         nextCampaignId = 1;
+    }
+
+    function setGovernorFactory(
+        IGovernorFactory _governorFactory
+    ) public onlyOwner {
+        require(address(_governorFactory) != address(0), "Invalid address");
+        governorFactory = _governorFactory;
+    }
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
     }
 
     function launchCampaign(
@@ -56,6 +78,7 @@ contract Campaign is Context, ICampaign {
         campaign.tokenRaising = tokenRaising;
 
         _campaignsOwn[msg.sender].push(currentCampaignId);
+        campaignFounders[currentCampaignId] = msg.sender;
 
         emit CampaignLaunched(currentCampaignId);
 
@@ -111,7 +134,30 @@ contract Campaign is Context, ICampaign {
         course.minted += 1;
         Governor governor = Governor(payable(course.governor));
         IVotes erc721Votes = IVotes(governor.token());
-        tokenId = erc721Votes.mint(_msgSender(), amount);
+        tokenId = erc721Votes.mint(msg.sender, amount);
+
+        if (!isInvestedCampaign[msg.sender][campaignId]) {
+            isInvestedCampaign[msg.sender][campaignId] = true;
+            investedCampaignList[msg.sender].push(campaignId);
+        }
+
+        if (!isInvestedGovernor[msg.sender][address(governor)]) {
+            isInvestedGovernor[msg.sender][address(governor)] = true;
+            investedGovernorList[msg.sender].push(address(governor));
+        }
+
+        if (
+            !isInvestedGovernorInACampaign[msg.sender][campaignId][
+                address(governor)
+            ]
+        ) {
+            isInvestedGovernorInACampaign[msg.sender][campaignId][
+                address(governor)
+            ] = true;
+            investedGovernorInACampaignList[msg.sender][campaignId].push(
+                address(governor)
+            );
+        }
 
         emit Fund(campaignId, governorId, amount, tokenId);
     }
@@ -155,10 +201,6 @@ contract Campaign is Context, ICampaign {
         }
     }
 
-    function governorFactory() public view returns (IGovernorFactory) {
-        return _governorFactory;
-    }
-
     function courseData(
         uint256 campaignId,
         uint256 governorId
@@ -167,9 +209,9 @@ contract Campaign is Context, ICampaign {
     }
 
     function campaignsOwn(
-        address owner
+        address _owner
     ) public view returns (uint256[] memory) {
-        return _campaignsOwn[owner];
+        return _campaignsOwn[_owner];
     }
 
     function joinedCampaign(

@@ -5,9 +5,20 @@
     "hardhat": "^2.22.6",
     "hardhat-contract-sizer": "^2.10.0"
   },
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy": "hardhat deploy",
+    "clean": "hardhat clean",
+    "local-node": "hardhat node --no-deploy"
+  },
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.2",
+    "@openzeppelin/contracts-upgradeable": "^5.0.2",
+    "@openzeppelin/hardhat-upgrades": "^3.2.1",
     "dotenv": "^16.4.5",
-    "hardhat-abi-exporter": "^2.10.1"
+    "hardhat-abi-exporter": "^2.10.1",
+    "hardhat-deploy": "^0.12.4",
+    "hardhat-deploy-ethers": "^0.4.2"
   }
 }
