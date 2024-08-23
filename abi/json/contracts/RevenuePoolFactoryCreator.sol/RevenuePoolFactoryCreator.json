@@ -1,0 +1,31 @@
+[
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "governor_",
+        "type": "address"
+      }
+    ],
+    "name": "createRevenuePoolFactory",
+    "outputs": [
+      {
+        "internalType": "contract RevenuePoolFactory",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

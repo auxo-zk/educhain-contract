@@ -12,7 +12,6 @@ import "./interfaces/ICampaign.sol";
 import "./interfaces/IVotes.sol";
 
 contract Campaign is OwnableUpgradeable, ICampaign {
-    
     IGovernorFactory public governorFactory;
     uint256 public nextCampaignId;
 
@@ -29,11 +28,9 @@ contract Campaign is OwnableUpgradeable, ICampaign {
     mapping(address investor => mapping(uint256 campaignId => mapping(address governor => bool)))
         public isInvestedGovernorInACampaign;
 
-    mapping(address investor => uint256[] campaignId)
-        public investedCampaignList;
-    mapping(address investor => address[] governor) public investedGovernorList;
-    mapping(address investor => mapping(uint256 campaignId => address[] governors))
-        public investedGovernorInACampaignList;
+    mapping(address investor => uint256[] campaignId) _investedCampaignList;
+    mapping(address investor => address[] governor) _investedGovernorList;
+    mapping(address investor => mapping(uint256 campaignId => address[] governors)) _investedGovernorInACampaignList;
 
     modifier onlyGovernorFactory() {
         require(msg.sender == address(governorFactory));
@@ -138,12 +135,12 @@ contract Campaign is OwnableUpgradeable, ICampaign {
 
         if (!isInvestedCampaign[msg.sender][campaignId]) {
             isInvestedCampaign[msg.sender][campaignId] = true;
-            investedCampaignList[msg.sender].push(campaignId);
+            _investedCampaignList[msg.sender].push(campaignId);
         }
 
         if (!isInvestedGovernor[msg.sender][address(governor)]) {
             isInvestedGovernor[msg.sender][address(governor)] = true;
-            investedGovernorList[msg.sender].push(address(governor));
+            _investedGovernorList[msg.sender].push(address(governor));
         }
 
         if (
@@ -154,7 +151,7 @@ contract Campaign is OwnableUpgradeable, ICampaign {
             isInvestedGovernorInACampaign[msg.sender][campaignId][
                 address(governor)
             ] = true;
-            investedGovernorInACampaignList[msg.sender][campaignId].push(
+            _investedGovernorInACampaignList[msg.sender][campaignId].push(
                 address(governor)
             );
         }
@@ -218,6 +215,25 @@ contract Campaign is OwnableUpgradeable, ICampaign {
         address governorAddress
     ) public view returns (uint256[] memory) {
         return _joinedCampaign[governorAddress];
+    }
+
+    function investedCampaignList(
+        address investor
+    ) public view returns (uint256[] memory) {
+        return _investedCampaignList[investor];
+    }
+
+    function investedGovernorList(
+        address investor
+    ) public view returns (address[] memory) {
+        return _investedGovernorList[investor];
+    }
+
+    function investedGovernorInACampaignList(
+        address investor,
+        uint256 campaignId
+    ) public view returns (address[] memory) {
+        return _investedGovernorInACampaignList[investor][campaignId];
     }
 
     function campaignData(

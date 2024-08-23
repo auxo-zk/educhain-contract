@@ -8,8 +8,6 @@ import "./interfaces/IGovernor.sol";
 import "./interfaces/IGovernorVotes.sol";
 import "./interfaces/IRevenuePool.sol";
 
-import "hardhat/console.sol";
-
 contract RevenuePool is Context, IRevenuePool {
     IGovernorVotes private immutable _governor;
     address private _token;
@@ -44,6 +42,23 @@ contract RevenuePool is Context, IRevenuePool {
         ERC20(_token).transfer(_msgSender(), claimAmount);
 
         emit RevenueClaimed(_msgSender(), tokenId);
+    }
+
+    function claimable(uint256 tokenId) public view returns (uint256) {
+        if (tokenId < _nextTokenId || !_claimed[tokenId]) {
+            uint256 value = governor().token().getVotes(tokenId, _msgSender());
+            return (_revenue * value) / _totalFunded;
+        }
+        return 0;
+    }
+
+    function claimables(
+        uint256[] calldata tokenIds
+    ) external view returns (uint256[] memory) {
+        uint256[] memory claimableAmounts = new uint256[](tokenIds.length);
+        for (uint256 i; i < tokenIds.length; i++) {
+            claimableAmounts[i] = claimable(tokenIds[i]);
+        }
     }
 
     function token() public view returns (address) {

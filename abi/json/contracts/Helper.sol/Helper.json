@@ -72,7 +72,7 @@
     "inputs": [
       {
         "internalType": "contract Campaign",
-        "name": "campaign",
+        "name": "campaignContract",
         "type": "address"
       },
       {

@@ -9,7 +9,7 @@ contract ERC721Votes is ERC721, IVotes {
 
     address public _minter;
     uint256 public nextTokenId;
-    
+
     mapping(uint256 tokenId => uint256) private _values;
     mapping(address user => uint256[] tokenIds) private _tokensOwned;
 

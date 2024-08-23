@@ -19,7 +19,6 @@ contract Governor is Context, IGovernor, GovernorVotes {
 
     ICampaign private _campaign;
     IRevenuePoolFactory private _revenuePoolFactory;
-    
     uint256 private _nextTokenId;
     uint256 private _proposalCounter;
     mapping(uint256 proposalIndex => uint256) private _proposalIds;
@@ -54,12 +53,6 @@ contract Governor is Context, IGovernor, GovernorVotes {
         _founder = founder_;
         _campaign = ICampaign(campaign_);
 
-        RevenuePoolFactory poolFactory = new RevenuePoolFactory(
-            _founder,
-            address(this)
-        );
-        _revenuePoolFactory = IRevenuePoolFactory(address(poolFactory));
-
         timelockPeriod = timelockPeriod_;
         queuingPeriod = queuingPeriod_;
     }
@@ -72,6 +65,10 @@ contract Governor is Context, IGovernor, GovernorVotes {
     modifier onlyCampaign() {
         require(_msgSender() == address(_campaign));
         _;
+    }
+
+    function setRevenuePoolFactory(address revenuePoolFactory_) external {
+        _revenuePoolFactory = IRevenuePoolFactory(revenuePoolFactory_);
     }
 
     function increaseFundedAndMinted(

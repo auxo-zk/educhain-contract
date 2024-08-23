@@ -9,5 +9,7 @@ interface IRevenuePoolFactory {
 
     function pool(uint256 poolIndex) external view returns (IRevenuePool);
 
+    function pools() external view returns (IRevenuePool[] memory);
+
     function poolCounter() external view returns (uint256);
 }

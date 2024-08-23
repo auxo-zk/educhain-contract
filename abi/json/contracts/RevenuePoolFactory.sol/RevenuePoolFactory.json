@@ -77,5 +77,18 @@
     ],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pools",
+    "outputs": [
+      {
+        "internalType": "contract IRevenuePool[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   }
 ]

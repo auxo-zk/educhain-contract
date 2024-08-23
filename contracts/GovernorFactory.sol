@@ -5,9 +5,11 @@ import "./interfaces/ICampaign.sol";
 import "./interfaces/IGovernorFactory.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./Governor.sol";
+import "./RevenuePoolFactoryCreator.sol";
 
 contract GovernorFactory is OwnableUpgradeable, IGovernorFactory {
     ICampaign private _campaign;
+    RevenuePoolFactoryCreator _revenuePoolFactoryCreator;
 
     uint256 public nextGovernorId;
     mapping(uint256 governorId => address) _governors;
@@ -22,15 +24,22 @@ contract GovernorFactory is OwnableUpgradeable, IGovernorFactory {
     function initialize(
         address initialOwner_,
         address campaign_,
+        address revenuePoolFactoryCreator_,
         uint64 timelockPeriod_,
         uint64 queuingPeriod_
     ) public initializer {
         require(initialOwner_ != address(0), "Invalid address");
+        require(campaign_ != address(0), "Invalid address");
+        require(revenuePoolFactoryCreator_ != address(0), "Invalid address");
+
         __Ownable_init(initialOwner_);
 
         _campaign = ICampaign(campaign_);
         timelockPeriod = timelockPeriod_;
         queuingPeriod = queuingPeriod_;
+        _revenuePoolFactoryCreator = RevenuePoolFactoryCreator(
+            revenuePoolFactoryCreator_
+        );
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -57,6 +66,13 @@ contract GovernorFactory is OwnableUpgradeable, IGovernorFactory {
                 timelockPeriod,
                 queuingPeriod
             )
+        );
+
+        RevenuePoolFactory revenuePoolFactory = _revenuePoolFactoryCreator
+            .createRevenuePoolFactory(msg.sender, governorAddress);
+
+        Governor(governorAddress).setRevenuePoolFactory(
+            address(revenuePoolFactory)
         );
 
         _governors[governorId] = governorAddress;

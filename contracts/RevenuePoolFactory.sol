@@ -2,13 +2,12 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/utils/Context.sol";
 import "./interfaces/IGovernor.sol";
 import "./interfaces/IRevenuePool.sol";
 import "./interfaces/IRevenuePoolFactory.sol";
 import "./RevenuePool.sol";
 
-contract RevenuePoolFactory is Context, IRevenuePoolFactory {
+contract RevenuePoolFactory is IRevenuePoolFactory {
     address private _owner;
     IGovernor private immutable _governor;
     IRevenuePool[] private _pools;
@@ -19,7 +18,7 @@ contract RevenuePoolFactory is Context, IRevenuePoolFactory {
     }
 
     modifier onlyOwner() {
-        require(_msgSender() == _owner);
+        require(msg.sender == _owner);
         _;
     }
 
@@ -41,6 +40,10 @@ contract RevenuePoolFactory is Context, IRevenuePoolFactory {
 
     function pool(uint256 poolIndex) public view returns (IRevenuePool) {
         return _pools[poolIndex];
+    }
+
+    function pools() public view returns (IRevenuePool[] memory) {
+        return _pools;
     }
 
     function poolCounter() external view returns (uint256) {

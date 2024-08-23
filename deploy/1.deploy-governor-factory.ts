@@ -7,6 +7,7 @@ module.exports = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await getNamedAccounts();
 
   const campaign = await get("Campaign");
+  const revenuePoolFactoryCreator = await get("RevenuePoolFactoryCreator");
 
   await deploy("GovernorFactory", {
     from: deployer,
@@ -18,6 +19,7 @@ module.exports = async function (hre: HardhatRuntimeEnvironment) {
           args: [
             deployer,
             campaign.address, //refRevenue
+            revenuePoolFactoryCreator.address,
             0n,
             10000000000000000n,
           ],

@@ -357,19 +357,14 @@
         "internalType": "address",
         "name": "investor",
         "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "name": "investedCampaignList",
     "outputs": [
       {
-        "internalType": "uint256",
-        "name": "campaignId",
-        "type": "uint256"
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",
@@ -385,20 +380,15 @@
       {
         "internalType": "uint256",
         "name": "campaignId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
         "type": "uint256"
       }
     ],
     "name": "investedGovernorInACampaignList",
     "outputs": [
       {
-        "internalType": "address",
-        "name": "governors",
-        "type": "address"
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
       }
     ],
     "stateMutability": "view",
@@ -410,19 +400,14 @@
         "internalType": "address",
         "name": "investor",
         "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "name": "investedGovernorList",
     "outputs": [
       {
-        "internalType": "address",
-        "name": "governor",
-        "type": "address"
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
       }
     ],
     "stateMutability": "view",
