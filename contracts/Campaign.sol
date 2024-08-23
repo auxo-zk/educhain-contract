@@ -112,7 +112,7 @@ contract Campaign is OwnableUpgradeable, ICampaign {
         uint256 campaignId,
         uint256 governorId,
         uint256 amount
-    ) external payable returns (uint256 tokenId) {
+    ) public returns (uint256 tokenId) {
         require(state(campaignId) == CampaignState.Active);
 
         CampaignCore storage campaign = _campaigns[campaignId];
@@ -157,6 +157,17 @@ contract Campaign is OwnableUpgradeable, ICampaign {
         }
 
         emit Fund(campaignId, governorId, amount, tokenId);
+    }
+
+    function funds(
+        uint256 campaignId,
+        uint256[] calldata governorIds,
+        uint256[] calldata amounts
+    ) public  {
+        require(governorIds.length == amounts.length, "Invalid length");
+        for(uint i; i< governorIds.length; i ++){
+            fund(campaignId, governorIds[i], amounts[i]);
+        }
     }
 
     function allocateFunds(uint256 campaignId) external {

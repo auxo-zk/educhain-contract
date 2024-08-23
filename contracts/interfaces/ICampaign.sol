@@ -56,7 +56,7 @@ interface ICampaign {
         uint256 campaignId,
         uint256 governorId,
         uint256 amount
-    ) external payable returns (uint256 tokenId);
+    ) external returns (uint256 tokenId);
 
     function allocateFunds(uint256 campaignId) external;
 
