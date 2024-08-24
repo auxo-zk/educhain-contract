@@ -12,6 +12,22 @@ import "./interfaces/ICampaign.sol";
 import "./interfaces/IVotes.sol";
 
 contract Campaign is OwnableUpgradeable, ICampaign {
+    struct VestedDetail {
+        uint256 vestedAmount;
+        uint256 vestedTimeStamp;
+    }
+
+    struct VestedDetailOfACampaign {
+        address governor;
+        VestedDetail[] vestedDetails;
+    }
+
+    struct VestedDetailOfAGovernor {
+        uint256 campaignId;
+        address tokenAddress;
+        VestedDetail[] vestedDetails;
+    }
+
     IGovernorFactory public governorFactory;
     uint256 public nextCampaignId;
 
@@ -32,13 +48,21 @@ contract Campaign is OwnableUpgradeable, ICampaign {
     mapping(address investor => address[] governor) _investedGovernorList;
     mapping(address investor => mapping(uint256 campaignId => address[] governors)) _investedGovernorInACampaignList;
 
+    // fund/vesting
+    mapping(uint256 campaignId => mapping(address governor => uint256 fundedAmount))
+        public fundedAmounts;
+    mapping(uint256 campaignId => mapping(address governor => uint256 totalVested))
+        public totalVesteds;
+    mapping(uint256 campaignId => mapping(address governor => VestedDetail[]))
+        private _vestedDetails;
+
     modifier onlyGovernorFactory() {
-        require(msg.sender == address(governorFactory));
+        require(msg.sender == address(governorFactory), "not governorFactory");
         _;
     }
 
     modifier onlyGovernor() {
-        require(governorFactory.hasGovernor(msg.sender));
+        require(governorFactory.hasGovernor(msg.sender), "!hasGovernor");
         _;
     }
 
@@ -91,11 +115,14 @@ contract Campaign is OwnableUpgradeable, ICampaign {
         address founder = Governor(governor).founder();
         require(founder == msg.sender, "Not founder");
 
-        require(state(campaignId) == CampaignState.Pending);
+        require(
+            state(campaignId) == CampaignState.Pending,
+            "Not in pending state"
+        );
 
         CampaignCore storage campaign = _campaigns[campaignId];
         Course storage course = campaign.courses[governorId];
-        require(course.governor == address(0));
+        require(course.governor == address(0), "Governor address = 0!");
         course.governor = governor;
         course.descriptionHash = descriptionHash;
 
@@ -113,11 +140,17 @@ contract Campaign is OwnableUpgradeable, ICampaign {
         uint256 governorId,
         uint256 amount
     ) public returns (uint256 tokenId) {
-        require(state(campaignId) == CampaignState.Active);
+        require(
+            state(campaignId) == CampaignState.Active,
+            "Not in active state"
+        );
 
         CampaignCore storage campaign = _campaigns[campaignId];
         Course storage course = campaign.courses[governorId];
-        require(course.governor != address(0));
+        require(
+            course.governor != address(0),
+            "Governor address is address(0)"
+        );
 
         // transfer money to this contract
         ERC20(campaign.tokenRaising).transferFrom(
@@ -163,15 +196,18 @@ contract Campaign is OwnableUpgradeable, ICampaign {
         uint256 campaignId,
         uint256[] calldata governorIds,
         uint256[] calldata amounts
-    ) public  {
+    ) public {
         require(governorIds.length == amounts.length, "Invalid length");
-        for(uint i; i< governorIds.length; i ++){
+        for (uint i; i < governorIds.length; i++) {
             fund(campaignId, governorIds[i], amounts[i]);
         }
     }
 
     function allocateFunds(uint256 campaignId) external {
-        require(state(campaignId) == CampaignState.Succeeded);
+        require(
+            state(campaignId) == CampaignState.Succeeded,
+            "Not in succeeded state"
+        );
 
         CampaignCore storage campaign = _campaigns[campaignId];
         campaign.allocated = true;
@@ -182,7 +218,7 @@ contract Campaign is OwnableUpgradeable, ICampaign {
 
             Course storage course = campaign.courses[governorId];
 
-            tokenRaising.transfer(course.governor, course.fund);
+            fundedAmounts[campaignId][course.governor] = course.fund;
 
             Governor(course.governor).increaseFundedAndMinted(
                 course.fund,
@@ -191,6 +227,31 @@ contract Campaign is OwnableUpgradeable, ICampaign {
         }
 
         emit FundAllocated(campaignId, campaign.governorIds);
+    }
+
+    function ableToVestAmount(
+        uint256 _campaignId,
+        address _governor
+    ) external view returns (uint256) {
+        uint256 fundedAmount = fundedAmounts[_campaignId][_governor];
+        uint256 totalVested = totalVesteds[_campaignId][_governor];
+        if (fundedAmount > totalVested) {
+            return fundedAmount - totalVested;
+        } else {
+            return 0;
+        }
+    }
+
+    function vestting(
+        uint256 _campaignId,
+        address _governor,
+        uint256 _amount
+    ) external {
+        require(msg.sender == _governor, "Not governor");
+        totalVesteds[_campaignId][_governor] += _amount;
+        _vestedDetails[_campaignId][_governor].push(
+            VestedDetail(_amount, block.timestamp)
+        );
     }
 
     function state(uint256 campaignId) public view returns (CampaignState) {
@@ -214,6 +275,54 @@ contract Campaign is OwnableUpgradeable, ICampaign {
         uint256 governorId
     ) public view returns (Course memory) {
         return _campaigns[campaignId].courses[governorId];
+    }
+
+    function vestedDetailOfACampaign(
+        uint256 campaignId
+    )
+        external
+        view
+        returns (address tokenAddress, VestedDetailOfACampaign[] memory)
+    {
+        CampaignCore storage campaign = _campaigns[campaignId];
+        uint256[] memory governorIds = campaign.governorIds;
+        VestedDetailOfACampaign[]
+            memory vestedDetailOfACampaign = new VestedDetailOfACampaign[](
+                governorIds.length
+            );
+
+        for (uint i; i < governorIds.length; i++) {
+            Course storage course = campaign.courses[governorIds[i]];
+            address governor = course.governor;
+            vestedDetailOfACampaign[i] = VestedDetailOfACampaign(
+                governor,
+                _vestedDetails[campaignId][governor]
+            );
+        }
+
+        return (campaign.tokenRaising, vestedDetailOfACampaign);
+    }
+
+    function vestedDetailOfAGovernor(
+        address governor
+    ) external view returns (VestedDetailOfAGovernor[] memory) {
+        uint256[] memory campaignIds = _joinedCampaign[governor];
+        VestedDetailOfAGovernor[]
+            memory vestedDetailOfAGovernors = new VestedDetailOfAGovernor[](
+                campaignIds.length
+            );
+
+        for (uint256 i; i < campaignIds.length; i++) {
+            uint256 campaignId = campaignIds[i];
+            CampaignCore storage campaign = _campaigns[campaignId];
+            vestedDetailOfAGovernors[i] = VestedDetailOfAGovernor(
+                campaignId,
+                campaign.tokenRaising,
+                _vestedDetails[campaignId][governor]
+            );
+        }
+
+        return (vestedDetailOfAGovernors);
     }
 
     function campaignsOwn(

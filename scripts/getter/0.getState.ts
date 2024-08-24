@@ -11,11 +11,12 @@ async function main() {
 
   const campaign = await contractAt(
     "Campaign",
-    "0x17049dC67055b8D8d762eC5D8c331077e44eBB83"
+    "0xF13f328C397891dF0207eD628976fA4a2Af9d835"
   );
 
   console.log("nextCampaignId: ", await campaign.nextCampaignId());
-  console.log("campaign 0: ", await campaign.state(1));
+  console.log("campaign state: ", await campaign.state(4));
+  console.log("campaign data: ", await campaign.campaignData(4));
 }
 
 main()
