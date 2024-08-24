@@ -140,8 +140,37 @@
     "outputs": [
       {
         "internalType": "uint256[]",
-        "name": "",
+        "name": "claimables",
         "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "claimeds",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "governor",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "claimedAmounts",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",

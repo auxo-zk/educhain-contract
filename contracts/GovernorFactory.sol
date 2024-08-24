@@ -43,6 +43,30 @@ contract GovernorFactory is OwnableUpgradeable, IGovernorFactory {
         );
     }
 
+    function changeRevenuePoolFactoryCreator(
+        address revenuePoolFactoryCreator_
+    ) external onlyOwner {
+        require(revenuePoolFactoryCreator_ != address(0), "Invalid address");
+        _revenuePoolFactoryCreator = RevenuePoolFactoryCreator(
+            revenuePoolFactoryCreator_
+        );
+    }
+
+    function changeRevenuePoolFactory(
+        address governorAddress_,
+        address owner_
+    ) external onlyOwner {
+        require(governorAddress_ != address(0), "Invalid address");
+        require(owner_ != address(0), "Invalid address");
+
+        RevenuePoolFactory revenuePoolFactory = _revenuePoolFactoryCreator
+            .createRevenuePoolFactory(owner_, governorAddress_);
+
+        Governor(governorAddress_).setRevenuePoolFactory(
+            address(revenuePoolFactory)
+        );
+    }
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {}
 

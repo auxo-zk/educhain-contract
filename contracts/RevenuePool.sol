@@ -7,6 +7,7 @@ import "./interfaces/IRevenuePool.sol";
 import "./interfaces/IGovernor.sol";
 import "./interfaces/IGovernorVotes.sol";
 import "./interfaces/IRevenuePool.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 contract RevenuePool is Context, IRevenuePool {
     IGovernorVotes private immutable _governor;
@@ -33,20 +34,23 @@ contract RevenuePool is Context, IRevenuePool {
         require(!claimed(tokenId), "Claimed!");
         require(tokenId < _nextTokenId, "Invalid tokenId");
 
-        uint256 value = governor().token().getVotes(tokenId, _msgSender());
+        uint256 value = governor().token().getVotingPower(tokenId);
+        address tokenOwner = ERC721(address(governor().token())).ownerOf(
+            tokenId
+        );
 
         _claimed[tokenId] = true;
 
         uint256 claimAmount = (_revenue * value) / _totalFunded;
 
-        ERC20(_token).transfer(_msgSender(), claimAmount);
+        ERC20(_token).transfer(tokenOwner, claimAmount);
 
-        emit RevenueClaimed(_msgSender(), tokenId);
+        emit RevenueClaimed(tokenOwner, tokenId);
     }
 
     function claimable(uint256 tokenId) public view returns (uint256) {
         if (tokenId < _nextTokenId || !_claimed[tokenId]) {
-            uint256 value = governor().token().getVotes(tokenId, _msgSender());
+            uint256 value = governor().token().getVotingPower(tokenId);
             return (_revenue * value) / _totalFunded;
         }
         return 0;

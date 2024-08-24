@@ -102,6 +102,37 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "governorAddress_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "owner_",
+        "type": "address"
+      }
+    ],
+    "name": "changeRevenuePoolFactory",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "revenuePoolFactoryCreator_",
+        "type": "address"
+      }
+    ],
+    "name": "changeRevenuePoolFactoryCreator",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "string",
         "name": "name",
         "type": "string"

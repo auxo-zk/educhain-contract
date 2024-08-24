@@ -23,4 +23,4 @@ module.exports = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 module.exports.dependencies = [];
-module.exports.tags = ["Campaign"];
+module.exports.tags = ["Helper"];

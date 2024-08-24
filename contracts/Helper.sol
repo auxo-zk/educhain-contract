@@ -11,6 +11,9 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 contract Helper is OwnableUpgradeable {
     address public campaignContract;
 
+    mapping(address governor => mapping(uint256 tokenId => uint256 amount))
+        public claimedAmounts;
+
     constructor() {
         _disableInitializers();
     }
@@ -53,14 +56,20 @@ contract Helper is OwnableUpgradeable {
     function claimables(
         address governorAddress,
         uint256[] calldata tokenIds
-    ) public view returns (uint256[] memory) {
-        uint256[] memory totalAmounts = new uint256[](tokenIds.length);
+    )
+        public
+        view
+        returns (uint256[] memory claimables, uint256[] memory claimeds)
+    {
+        uint256[] memory claimables = new uint256[](tokenIds.length);
+        uint256[] memory claimeds = new uint256[](tokenIds.length);
 
         for (uint256 i; i < tokenIds.length; i++) {
-            totalAmounts[i] = claimable(governorAddress, tokenIds[i]);
+            claimables[i] = claimable(governorAddress, tokenIds[i]);
+            claimeds[i] = claimedAmounts[governorAddress][tokenIds[i]];
         }
 
-        return totalAmounts;
+        return (claimables, claimeds);
     }
 
     function claim(address governorAddress, uint256 tokenId) external {
@@ -74,7 +83,8 @@ contract Helper is OwnableUpgradeable {
             if (claimAmount > 0) {
                 address tokenAddress = pools[j].token();
                 pools[j].claim(tokenId);
-                ERC20(tokenAddress).transfer(_msgSender(), claimAmount);
+
+                claimedAmounts[governorAddress][tokenId] += claimAmount;
             }
         }
     }
