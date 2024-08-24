@@ -15,4 +15,14 @@ interface IRevenuePool {
     function nextTokenId() external view returns (uint256);
 
     function claimed(uint256 tokenId) external view returns (bool);
+
+    function claimable(uint256 tokenId) external view returns (uint256);
+
+    function claimables(
+        uint256[] calldata tokenIds
+    ) external view returns (uint256[] memory);
+
+    function token() external view returns (address);
+
+    function claim(uint256 tokenId) external;
 }

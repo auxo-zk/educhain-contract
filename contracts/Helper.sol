@@ -9,32 +9,62 @@ import "./interfaces/IRevenuePoolFactory.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract Helper is OwnableUpgradeable {
-    constructor() {}
+    address public campaignContract;
 
-    struct RevenueData {
-        address tokenClaim;
-        uint256 claimableAmout;
-        address revenuePoolAddress;
-    }
-    struct TokenInfoFull {
-        address governorAddress;
-        uint256 tokenId;
-        uint256 tokenPower;
-        RevenueData[] revenueDatas;
+    constructor(address _campaignContract) {
+        require(_campaignContract != address(0), "Invalid address");
+        campaignContract = _campaignContract;
     }
 
-    function allTokenInfo(
-        Campaign campaignContract,
-        address user
-    ) external view {
-        address[] memory investedGovernors = campaignContract
-            .investedGovernorList(user);
+    function setCampaignAddress(address _campaignContract) external onlyOwner {
+        require(_campaignContract != address(0), "Invalid address");
+        campaignContract = _campaignContract;
+    }
 
-        for (uint256 i; i < investedGovernors.length; i++) {
-            IRevenuePoolFactory revenuePoolFactorys = Governor(
-                investedGovernors[i]
-            ).revenuePoolFactory();
-            IRevenuePool[] memory pools = revenuePoolFactorys.pools();
+    function claimable(
+        address governorAddress,
+        uint256 tokenId
+    ) public view returns (uint256) {
+        uint256 totalAmount;
+
+        IRevenuePoolFactory revenuePoolFactorys = Governor(governorAddress)
+            .revenuePoolFactory();
+
+        IRevenuePool[] memory pools = revenuePoolFactorys.pools();
+
+        for (uint256 j; j < pools.length; j++) {
+            totalAmount += pools[j].claimable(tokenId);
+        }
+
+        return totalAmount;
+    }
+
+    function claimables(
+        address governorAddress,
+        uint256[] calldata tokenIds
+    ) public view returns (uint256[] memory) {
+        uint256[] memory totalAmounts = new uint256[](tokenIds.length);
+
+        for (uint256 i; i < tokenIds.length; i++) {
+            totalAmounts[i] = claimable(governorAddress, tokenIds[i]);
+        }
+
+        return totalAmounts;
+    }
+
+    function claim(address governorAddress, uint256 tokenId) external {
+        IRevenuePoolFactory revenuePoolFactorys = Governor(governorAddress)
+            .revenuePoolFactory();
+
+        IRevenuePool[] memory pools = revenuePoolFactorys.pools();
+
+        for (uint256 j; j < pools.length; j++) {
+            uint256 claimAmount = pools[j].claimable(tokenId);
+            if (claimAmount > 0) {
+                address tokenAddress = pools[j].token();
+                pools[j].claim(tokenId);
+                ERC20(tokenAddress).transfer(_msgSender(), claimAmount);
+            }
         }
     }
 }
