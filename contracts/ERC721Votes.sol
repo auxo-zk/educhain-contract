@@ -11,6 +11,7 @@ contract ERC721Votes is ERC721, IVotes {
     uint256 public nextTokenId;
 
     mapping(uint256 tokenId => uint256) private _values;
+    mapping(uint256 tokenId => uint256) private _campaignJoineds;
     mapping(address user => uint256[] tokenIds) private _tokensOwned;
 
     constructor(
@@ -28,7 +29,8 @@ contract ERC721Votes is ERC721, IVotes {
 
     function mint(
         address to,
-        uint256 value
+        uint256 value,
+        uint256 campaign
     ) external onlyMinter returns (uint256 tokenId) {
         tokenId = nextTokenId;
         nextTokenId++;
@@ -53,8 +55,23 @@ contract ERC721Votes is ERC721, IVotes {
         uint256[] memory tokenOwned = _tokensOwned[owner];
         TokenInfos[] memory tokenInfos = new TokenInfos[](tokenOwned.length);
         for (uint256 i; i < tokenOwned.length; i++) {
-            tokenInfos[i] = TokenInfos(tokenOwned[i], _values[i]);
+            tokenInfos[i] = TokenInfos(
+                tokenOwned[i],
+                _campaignJoineds[tokenOwned[i]],
+                _values[tokenOwned[i]]
+            );
         }
+        return tokenInfos;
+    }
+
+    function tokensOwned(
+        address _owner
+    ) external view returns (uint256[] memory) {
+        return _tokensOwned[_owner];
+    }
+
+    function campaignJoineds(uint256 _tokenId) external view returns (uint256) {
+        return _campaignJoineds[_tokenId];
     }
 
     function getVotingPower(uint256 tokenId) external view returns (uint256) {

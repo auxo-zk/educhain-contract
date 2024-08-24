@@ -53,8 +53,7 @@ contract Campaign is OwnableUpgradeable, ICampaign {
         public fundedAmounts;
     mapping(uint256 campaignId => mapping(address governor => uint256 totalVested))
         public totalVesteds;
-    mapping(uint256 campaignId => mapping(address governor => VestedDetail[]))
-        private _vestedDetails;
+    mapping(uint256 campaignId => mapping(address governor => VestedDetail[])) _vestedDetails;
 
     modifier onlyGovernorFactory() {
         require(msg.sender == address(governorFactory), "not governorFactory");
@@ -164,7 +163,7 @@ contract Campaign is OwnableUpgradeable, ICampaign {
         course.minted += 1;
         Governor governor = Governor(payable(course.governor));
         IVotes erc721Votes = IVotes(governor.token());
-        tokenId = erc721Votes.mint(msg.sender, amount);
+        tokenId = erc721Votes.mint(msg.sender, amount, campaignId);
 
         if (!isInvestedCampaign[msg.sender][campaignId]) {
             isInvestedCampaign[msg.sender][campaignId] = true;
