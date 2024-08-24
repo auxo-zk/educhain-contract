@@ -11,9 +11,20 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 contract Helper is OwnableUpgradeable {
     address public campaignContract;
 
-    constructor(address _campaignContract) {
-        require(_campaignContract != address(0), "Invalid address");
-        campaignContract = _campaignContract;
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(
+        address initialOwner_,
+        address campaignContract_
+    ) public initializer {
+        require(initialOwner_ != address(0), "Invalid address");
+        require(campaignContract_ != address(0), "Invalid address");
+
+        __Ownable_init(initialOwner_);
+
+        campaignContract = campaignContract_;
     }
 
     function setCampaignAddress(address _campaignContract) external onlyOwner {

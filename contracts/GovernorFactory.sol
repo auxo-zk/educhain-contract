@@ -9,6 +9,13 @@ import "./RevenuePoolFactoryCreator.sol";
 import "./interfaces/IVotes.sol";
 
 contract GovernorFactory is OwnableUpgradeable, IGovernorFactory {
+    struct NFTData {
+        uint256 id;
+        uint256 campaignId;
+        uint256 value;
+        address tokenFundAddress;
+    }
+
     ICampaign private _campaign;
     RevenuePoolFactoryCreator _revenuePoolFactoryCreator;
 
@@ -138,14 +145,22 @@ contract GovernorFactory is OwnableUpgradeable, IGovernorFactory {
     function getAllToken(
         address governorAddress,
         address tokenOwner
-    ) external view returns (IVotes.TokenInfos[] memory, uint256 totalValue) {
+    ) external view returns (NFTData[] memory, uint256 totalValue) {
         IVotes.TokenInfos[] memory tokenInfos = IVotes(
             Governor(governorAddress).token()
         ).getAllToken(tokenOwner);
 
+        NFTData[] memory nftDatas = new NFTData[](tokenInfos.length);
+
         for (uint256 i; i < tokenInfos.length; i++) {
+            nftDatas[i].id = tokenInfos[i].id;
+            nftDatas[i].campaignId = tokenInfos[i].campaignId;
+            nftDatas[i].value = tokenInfos[i].value;
+            (, , , , , nftDatas[i].tokenFundAddress, ) = _campaign.campaignData(
+                tokenInfos[i].campaignId
+            );
             totalValue += tokenInfos[i].value;
         }
-        return (tokenInfos, totalValue);
+        return (nftDatas, totalValue);
     }
 }

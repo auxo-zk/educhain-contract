@@ -3,17 +3,18 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 module.exports = async function (hre: HardhatRuntimeEnvironment) {
   const { getNamedAccounts, deployments } = hre;
 
-  const { deploy } = deployments;
+  const { deploy, get } = deployments;
   const { deployer } = await getNamedAccounts();
+  const campaign = await get("Campaign");
 
-  await deploy("Campaign", {
+  await deploy("Helper", {
     from: deployer,
     proxy: {
       proxyContract: "OpenZeppelinTransparentProxy",
       execute: {
         init: {
           methodName: "initialize",
-          args: [deployer],
+          args: [deployer, campaign.address],
         },
       },
     },
