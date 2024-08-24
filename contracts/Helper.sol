@@ -38,7 +38,7 @@ contract Helper is OwnableUpgradeable {
     function claimable(
         address governorAddress,
         uint256 tokenId
-    ) public view returns (uint256) {
+    ) public view returns (uint256, uint256) {
         uint256 totalAmount;
 
         IRevenuePoolFactory revenuePoolFactorys = Governor(governorAddress)
@@ -50,7 +50,7 @@ contract Helper is OwnableUpgradeable {
             totalAmount += pools[j].claimable(tokenId);
         }
 
-        return totalAmount;
+        return (totalAmount, claimedAmounts[governorAddress][tokenId]);
     }
 
     function claimables(
@@ -65,8 +65,10 @@ contract Helper is OwnableUpgradeable {
         uint256[] memory claimeds = new uint256[](tokenIds.length);
 
         for (uint256 i; i < tokenIds.length; i++) {
-            claimables[i] = claimable(governorAddress, tokenIds[i]);
-            claimeds[i] = claimedAmounts[governorAddress][tokenIds[i]];
+            (claimables[i], claimeds[i]) = claimable(
+                governorAddress,
+                tokenIds[i]
+            );
         }
 
         return (claimables, claimeds);
@@ -82,6 +84,7 @@ contract Helper is OwnableUpgradeable {
             uint256 claimAmount = pools[j].claimable(tokenId);
             if (claimAmount > 0) {
                 address tokenAddress = pools[j].token();
+
                 pools[j].claim(tokenId);
 
                 claimedAmounts[governorAddress][tokenId] += claimAmount;
