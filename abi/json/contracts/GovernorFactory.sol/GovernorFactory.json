@@ -202,14 +202,9 @@
             "internalType": "uint256",
             "name": "value",
             "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "tokenFundAddress",
-            "type": "address"
           }
         ],
-        "internalType": "struct GovernorFactory.NFTData[]",
+        "internalType": "struct IVotes.TokenInfos[]",
         "name": "",
         "type": "tuple[]"
       },
