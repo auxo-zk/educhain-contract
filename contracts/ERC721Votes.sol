@@ -13,11 +13,6 @@ contract ERC721Votes is ERC721, IVotes {
     mapping(uint256 tokenId => uint256) private _values;
     mapping(address user => uint256[] tokenIds) private _tokensOwned;
 
-    struct TokenInfos {
-        uint256 id;
-        uint256 value;
-    }
-
     constructor(
         string memory name_,
         string memory symbol_,
@@ -52,7 +47,9 @@ contract ERC721Votes is ERC721, IVotes {
         return _values[tokenId];
     }
 
-    function getAllToken(address owner) external returns (TokenInfos[] memory) {
+    function getAllToken(
+        address owner
+    ) external view returns (TokenInfos[] memory) {
         uint256[] memory tokenOwned = _tokensOwned[owner];
         TokenInfos[] memory tokenInfos = new TokenInfos[](tokenOwned.length);
         for (uint256 i; i < tokenOwned.length; i++) {

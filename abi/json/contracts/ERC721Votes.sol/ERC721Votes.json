@@ -276,12 +276,12 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ERC721Votes.TokenInfos[]",
+        "internalType": "struct IVotes.TokenInfos[]",
         "name": "",
         "type": "tuple[]"
       }
     ],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {

@@ -242,7 +242,7 @@ contract Campaign is OwnableUpgradeable, ICampaign {
         }
     }
 
-    function vestting(
+    function vesting(
         uint256 _campaignId,
         address _governor,
         uint256 _amount

@@ -6,6 +6,7 @@ import "./interfaces/IGovernorFactory.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./Governor.sol";
 import "./RevenuePoolFactoryCreator.sol";
+import "./interfaces/IVotes.sol";
 
 contract GovernorFactory is OwnableUpgradeable, IGovernorFactory {
     ICampaign private _campaign;
@@ -117,5 +118,19 @@ contract GovernorFactory is OwnableUpgradeable, IGovernorFactory {
         address governorAddress
     ) external view override returns (bool) {
         return _hasGovernor[governorAddress];
+    }
+
+    function getAllToken(
+        address governorAddress,
+        address tokenOwner
+    ) external view returns (IVotes.TokenInfos[] memory, uint256 totalValue) {
+        IVotes.TokenInfos[] memory tokenInfos = IVotes(
+            Governor(governorAddress).token()
+        ).getAllToken(tokenOwner);
+
+        for (uint256 i; i < tokenInfos.length; i++) {
+            totalValue += tokenInfos[i].value;
+        }
+        return (tokenInfos, totalValue);
     }
 }
