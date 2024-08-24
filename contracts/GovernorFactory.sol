@@ -120,6 +120,15 @@ contract GovernorFactory is OwnableUpgradeable, IGovernorFactory {
         return _hasGovernor[governorAddress];
     }
 
+    function lastProposal(
+        address governorAddress
+    ) external view returns (Governor.ProposalCore memory) {
+        uint256 counter = Governor(governorAddress).proposalCounter();
+        if (counter > 0) {
+            return Governor(governorAddress).proposalCore(counter - 1);
+        }
+    }
+
     function getAllToken(
         address governorAddress,
         address tokenOwner

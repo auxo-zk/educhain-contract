@@ -289,6 +289,62 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "governorAddress",
+        "type": "address"
+      }
+    ],
+    "name": "lastProposal",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "proposer",
+            "type": "address"
+          },
+          {
+            "internalType": "uint64",
+            "name": "voteStart",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "voteDuration",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "descriptionHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bool",
+            "name": "executed",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "canceled",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint64",
+            "name": "etaBlocks",
+            "type": "uint64"
+          }
+        ],
+        "internalType": "struct IGovernor.ProposalCore",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "nextGovernorId",
     "outputs": [
