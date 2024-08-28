@@ -49,7 +49,7 @@ contract RevenuePool is Context, IRevenuePool {
     }
 
     function claimable(uint256 tokenId) public view returns (uint256) {
-        if (tokenId < _nextTokenId || !_claimed[tokenId]) {
+        if (tokenId < _nextTokenId && !_claimed[tokenId]) {
             uint256 value = governor().token().getVotingPower(tokenId);
             return (_revenue * value) / _totalFunded;
         }

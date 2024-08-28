@@ -491,11 +491,6 @@
         "type": "uint256"
       },
       {
-        "internalType": "string",
-        "name": "signature",
-        "type": "string"
-      },
-      {
         "internalType": "bytes",
         "name": "data",
         "type": "bytes"

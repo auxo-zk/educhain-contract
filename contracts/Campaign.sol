@@ -209,6 +209,7 @@ contract Campaign is OwnableUpgradeable, ICampaign {
         );
 
         CampaignCore storage campaign = _campaigns[campaignId];
+        require(!campaign.allocated, "Located already!");
         campaign.allocated = true;
         ERC20 tokenRaising = ERC20(campaign.tokenRaising);
 

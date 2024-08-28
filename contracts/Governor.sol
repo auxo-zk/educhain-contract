@@ -125,19 +125,22 @@ contract Governor is Context, IGovernor, GovernorVotes {
             proposalId,
             _encodeStateBitmap(ProposalState.Succeeded)
         );
+
         ProposalCore storage proposal = _proposals[proposalId];
         Action storage action = _actions[proposalId];
         uint64 etaBlocks = SafeCast.toUint64(clock() + timelockPeriod);
+
         for (uint256 i = 0; i < action.targets.length; i++) {
             _queueOperation(
                 action.targets[i],
                 action.values[i],
-                action.signatures[i],
                 action.calldatas[i],
                 proposal.descriptionHash
             );
         }
+
         proposal.etaBlocks = etaBlocks;
+
         emit ProposalQueued(proposalId, etaBlocks);
     }
 
@@ -159,7 +162,6 @@ contract Governor is Context, IGovernor, GovernorVotes {
             _executeOperation(
                 action.targets[i],
                 action.values[i],
-                action.signatures[i],
                 action.calldatas[i],
                 proposal.descriptionHash
             );
@@ -186,7 +188,6 @@ contract Governor is Context, IGovernor, GovernorVotes {
             _cancelOperation(
                 action.targets[i],
                 action.values[i],
-                action.signatures[i],
                 action.calldatas[i],
                 proposal.descriptionHash
             );
@@ -212,11 +213,10 @@ contract Governor is Context, IGovernor, GovernorVotes {
     function hashOperation(
         address target,
         uint256 value,
-        string memory signature,
         bytes memory data,
         bytes32 salt
     ) public pure returns (bytes32) {
-        return keccak256(abi.encode(target, value, signature, data, salt));
+        return keccak256(abi.encode(target, value, data, salt));
     }
 
     // ========= VIEW FUNCTIONS =========
@@ -270,7 +270,6 @@ contract Governor is Context, IGovernor, GovernorVotes {
     function state(
         uint256 proposalId
     ) public view virtual returns (ProposalState) {
-        // We read the struct fields into the stack at once so Solidity emits a single SLOAD
         ProposalCore storage proposal = _proposals[proposalId];
         bool proposalExecuted = proposal.executed;
         bool proposalCanceled = proposal.canceled;
@@ -427,14 +426,12 @@ contract Governor is Context, IGovernor, GovernorVotes {
     function _queueOperation(
         address target,
         uint256 value,
-        string memory signature,
         bytes memory data,
         bytes32 descriptionHash
     ) internal {
         bytes32 operationHash = hashOperation(
             target,
             value,
-            signature,
             data,
             descriptionHash
         );
@@ -449,14 +446,12 @@ contract Governor is Context, IGovernor, GovernorVotes {
     function _executeOperation(
         address target,
         uint256 value,
-        string memory signature,
         bytes memory data,
         bytes32 descriptionHash
     ) internal {
         bytes32 operationHash = hashOperation(
             target,
             value,
-            signature,
             data,
             descriptionHash
         );
@@ -466,14 +461,7 @@ contract Governor is Context, IGovernor, GovernorVotes {
         );
         _queuedOperations[operationHash] = false;
         bytes memory callData;
-        if (bytes(signature).length == 0) {
-            callData = data;
-        } else {
-            callData = abi.encodePacked(
-                bytes4(keccak256(bytes(signature))),
-                data
-            );
-        }
+        callData = data;
         // bytes memory returnData
         (bool success, ) = target.call{value: value}(callData);
         require(
@@ -485,14 +473,12 @@ contract Governor is Context, IGovernor, GovernorVotes {
     function _cancelOperation(
         address target,
         uint256 value,
-        string memory signature,
         bytes memory data,
         bytes32 descriptionHash
     ) internal {
         bytes32 operationHash = hashOperation(
             target,
             value,
-            signature,
             data,
             descriptionHash
         );

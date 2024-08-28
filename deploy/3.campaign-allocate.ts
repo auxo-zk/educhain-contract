@@ -13,7 +13,7 @@ module.exports = async function (hre: HardhatRuntimeEnvironment) {
       log: true,
     },
     "allocateFunds",
-    6
+    2
   );
 };
 

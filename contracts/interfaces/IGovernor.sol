@@ -115,7 +115,6 @@ interface IGovernor {
     function hashOperation(
         address target,
         uint256 value,
-        string memory signature,
         bytes memory data,
         bytes32 salt
     ) external pure returns (bytes32);
